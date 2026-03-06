@@ -12,10 +12,11 @@ import HourlyTimeline from "./components/HourlyTimeline"
 import TrendChart from "./components/TrendChart"
 import ForecastChart from "./components/ForecastChart"
 
-const QUICK_CITIES = ["Delhi", "Chennai", "Mumbai", "Kolkata", "Hyderabad", "Bengaluru"]
+const QUICK_CITIES = ["Delhi", "Chennai", "Mumbai", "Kolkata", "Hyderabad", "Bengaluru", "Ahmedabad", "Pune", "Jaipur", "Lucknow", "Chandigarh", "Bhopal", "Patna", "Kochi", "Guwahati", "Surat", "Nagpur", "Visakhapatnam", "Bhubaneswar", "Indore"]
 
 export default function App() {
   const [search, setSearch] = useState("")
+  const [showDropdown, setShowDropdown] = useState(false)
   const [location, setLocation] = useState(null)
   const [weather, setWeather] = useState(null)
   const [historical, setHistorical] = useState(null)
@@ -30,6 +31,7 @@ export default function App() {
 
   async function loadCityData(cityName) {
     setLoading(true)
+    setShowDropdown(false)
     setError(null)
     try {
       const loc = await geocodeCity(cityName)
@@ -53,7 +55,7 @@ export default function App() {
         c.windspeed_10m,
         c.direct_radiation
       )
-      const risk = getILOLevel(wbgt)
+      const risk = getILOLevel(wbgt, jobType)
       setWbgtValue(wbgt.toFixed(1))
       setRiskLevel(risk)
       setAlerts(generateAlerts(hist.daily, aq, loc.name))
@@ -63,31 +65,59 @@ export default function App() {
     setLoading(false)
   }
 
+  function handleJobTypeChange(type) {
+    setJobType(type)
+    if (wbgtValue) {
+      const risk = getILOLevel(parseFloat(wbgtValue), type)
+      setRiskLevel(risk)
+    }
+  }
+
+  const filteredCities = QUICK_CITIES.filter(c =>
+    c.toLowerCase().includes(search.toLowerCase())
+  )
+
   useEffect(() => { loadCityData("Delhi") }, [])
 
   const tabs = ["dashboard", "map", "trends", "compare"]
 
   return (
-    <div className="bg-gray-950 min-h-screen text-white font-sans">
+    <div className="bg-gray-950 min-h-screen text-white font-sans" onClick={() => setShowDropdown(false)}>
 
       {/* HEADER */}
       <div className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex flex-col md:flex-row items-center gap-4 sticky top-0 z-50">
         <h1 className="text-2xl font-black text-orange-500 tracking-widest">🔥 HEATGUARD</h1>
+
         <div className="flex gap-2 flex-1 justify-center">
-          <input
-            className="bg-gray-800 text-white px-4 py-2 rounded-lg w-64 outline-none border border-gray-700 focus:border-orange-500"
-            placeholder="Search city..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && loadCityData(search)}
-          />
+          <div className="relative" onClick={e => e.stopPropagation()}>
+            <input
+              className="bg-gray-800 text-white px-4 py-2 rounded-lg w-72 outline-none border border-gray-700 focus:border-orange-500"
+              placeholder="Search any city in India..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setShowDropdown(true) }}
+              onFocus={() => setShowDropdown(true)}
+              onKeyDown={e => { if (e.key === "Enter") { loadCityData(search); setShowDropdown(false) } }}
+            />
+            {showDropdown && search.length > 0 && filteredCities.length > 0 && (
+              <div className="absolute top-full left-0 w-72 bg-gray-800 border border-gray-700 rounded-lg mt-1 z-50 max-h-52 overflow-y-auto shadow-xl">
+                {filteredCities.map(c => (
+                  <div
+                    key={c}
+                    onClick={() => { setSearch(c); loadCityData(c) }}
+                    className="px-4 py-2 hover:bg-orange-500 cursor-pointer text-sm text-white border-b border-gray-700 last:border-0"
+                  >{c}</div>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => loadCityData(search)}
             className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg font-bold"
           >Search</button>
         </div>
+
         <div className="flex gap-2 flex-wrap justify-center">
-          {QUICK_CITIES.map(c => (
+          {QUICK_CITIES.slice(0, 6).map(c => (
             <button key={c}
               onClick={() => { setSearch(c); loadCityData(c) }}
               className="bg-gray-800 hover:bg-orange-500 text-xs px-3 py-1 rounded-full transition-colors"
@@ -97,7 +127,7 @@ export default function App() {
       </div>
 
       {/* TABS */}
-      <div className="flex gap-1 px-6 pt-4">
+      <div className="flex gap-1 px-6 pt-4 flex-wrap">
         {tabs.map(t => (
           <button key={t}
             onClick={() => setActiveTab(t)}
@@ -127,20 +157,16 @@ export default function App() {
               <p className="text-gray-500 text-sm">Live occupational heat stress intelligence</p>
             </div>
 
-            {/* ALERTS */}
-            <AlertPanel alerts={alerts} />
-
-            {/* STATS ROW */}
-            <StatsRow
-              temp={weather.current.temperature_2m}
-              humidity={weather.current.relative_humidity_2m}
-              windSpeed={weather.current.windspeed_10m}
-              aqi={airQuality?.aqi}
-            />
-
             {/* DASHBOARD */}
             {activeTab === "dashboard" && (
               <div className="flex flex-col gap-4">
+                <AlertPanel alerts={alerts} />
+                <StatsRow
+                  temp={weather.current.temperature_2m}
+                  humidity={weather.current.relative_humidity_2m}
+                  windSpeed={weather.current.windspeed_10m}
+                  aqi={airQuality?.aqi}
+                />
                 <div className="rounded-2xl p-8 border border-gray-800 bg-gray-900 flex flex-col items-center justify-center">
                   <p className="text-gray-400 text-sm mb-2 uppercase tracking-widest">Live WBGT Index</p>
                   <div className="text-9xl font-black mb-2" style={{ color: riskLevel?.color }}>{wbgtValue}°</div>
@@ -153,7 +179,7 @@ export default function App() {
                   wbgtValue={wbgtValue}
                   cityName={location?.name}
                   jobType={jobType}
-                  onJobTypeChange={setJobType}
+                  onJobTypeChange={handleJobTypeChange}
                 />
               </div>
             )}
@@ -163,7 +189,7 @@ export default function App() {
               <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
                 <div className="px-6 py-3 border-b border-gray-800">
                   <h3 className="text-lg font-bold text-orange-400">🗺️ Air Quality Map — India</h3>
-                  <p className="text-gray-500 text-sm">Live AQI across 15 major cities. Circle size = pollution intensity.</p>
+                  <p className="text-gray-500 text-sm">Live AQI across 15 major cities. Click any city for AI worker advisory.</p>
                 </div>
                 <div className="h-[600px]">
                   <Map location={location} />

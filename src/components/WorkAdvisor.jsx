@@ -10,15 +10,14 @@ export default function WorkAdvisor({ riskLevel, wbgtValue, cityName, jobType, o
             value={jobType}
             onChange={e => onJobTypeChange(e.target.value)}
           >
-            <option value="heavy">Heavy — Digging, Carrying, Concrete</option>
-            <option value="moderate">Moderate — Bricklaying, Plastering</option>
-            <option value="light">Light — Supervision, Finishing</option>
+            <option value="heavy">Heavy — Digging, Carrying, Concrete (limit: 25°C)</option>
+            <option value="moderate">Moderate — Bricklaying, Plastering (limit: 28°C)</option>
+            <option value="light">Light — Supervision, Finishing (limit: 30°C)</option>
           </select>
           <div className="p-4 rounded-xl border-2 text-center" style={{ borderColor: riskLevel?.color }}>
-            <p className="text-gray-400 text-xs mb-1">WBGT</p>
-            <p className="text-6xl font-black mb-1" style={{ color: riskLevel?.color }}>{wbgtValue}°</p>
-            <p className="text-xl font-bold mb-2" style={{ color: riskLevel?.color }}>{riskLevel?.label}</p>
-            <p className="text-white font-semibold">{riskLevel?.schedule}</p>
+            <p className="text-gray-400 text-xs mb-1">Risk Level for {jobType} work</p>
+            <p className="text-xl font-black mb-1" style={{ color: riskLevel?.color }}>{riskLevel?.label}</p>
+            <p className="text-white font-semibold text-lg">{riskLevel?.schedule}</p>
             <p className="text-blue-400 text-sm mt-2">💧 {riskLevel?.water}</p>
           </div>
         </div>

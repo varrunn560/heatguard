@@ -12,14 +12,31 @@ export function computeWBGT(T, RH, wind, rad) {
   return 0.7 * Tw + 0.2 * Tg + 0.1 * T;
 }
 
-export const ILO_LEVELS = [
-  { max: 26, label: "Safe", color: "#00e400", schedule: "Full work, normal breaks", water: "250ml every 20 min" },
-  { max: 28, label: "Caution", color: "#ffff00", schedule: "45min work / 15min break", water: "250ml every 15 min" },
-  { max: 30, label: "Warning", color: "#ff7e00", schedule: "30min work / 30min break", water: "250ml every 10 min" },
-  { max: 32, label: "Danger", color: "#ff0000", schedule: "15min work / 45min break", water: "250ml every 5 min" },
-  { max: 999, label: "STOP WORK", color: "#7e0023", schedule: "Halt all outdoor activity", water: "Move indoors immediately" },
-];
+const LEVELS_BY_JOB = {
+  heavy: [
+    { max: 25, label: "Safe", color: "#00e400", schedule: "Full work, normal breaks", water: "250ml every 20 min" },
+    { max: 26, label: "Caution", color: "#ffff00", schedule: "45min work / 15min break", water: "250ml every 15 min" },
+    { max: 28, label: "Warning", color: "#ff7e00", schedule: "30min work / 30min break", water: "250ml every 10 min" },
+    { max: 30, label: "Danger", color: "#ff0000", schedule: "15min work / 45min break", water: "250ml every 5 min" },
+    { max: 999, label: "STOP WORK", color: "#7e0023", schedule: "Halt all outdoor activity", water: "Move indoors immediately" },
+  ],
+  moderate: [
+    { max: 26, label: "Safe", color: "#00e400", schedule: "Full work, normal breaks", water: "250ml every 20 min" },
+    { max: 28, label: "Caution", color: "#ffff00", schedule: "45min work / 15min break", water: "250ml every 15 min" },
+    { max: 30, label: "Warning", color: "#ff7e00", schedule: "30min work / 30min break", water: "250ml every 10 min" },
+    { max: 32, label: "Danger", color: "#ff0000", schedule: "15min work / 45min break", water: "250ml every 5 min" },
+    { max: 999, label: "STOP WORK", color: "#7e0023", schedule: "Halt all outdoor activity", water: "Move indoors immediately" },
+  ],
+  light: [
+    { max: 28, label: "Safe", color: "#00e400", schedule: "Full work, normal breaks", water: "250ml every 20 min" },
+    { max: 30, label: "Caution", color: "#ffff00", schedule: "45min work / 15min break", water: "250ml every 15 min" },
+    { max: 32, label: "Warning", color: "#ff7e00", schedule: "30min work / 30min break", water: "250ml every 10 min" },
+    { max: 34, label: "Danger", color: "#ff0000", schedule: "15min work / 45min break", water: "250ml every 5 min" },
+    { max: 999, label: "STOP WORK", color: "#7e0023", schedule: "Halt all outdoor activity", water: "Move indoors immediately" },
+  ],
+}
 
-export function getILOLevel(wbgt) {
-  return ILO_LEVELS.find(l => wbgt <= l.max);
+export function getILOLevel(wbgt, jobType = "moderate") {
+  const levels = LEVELS_BY_JOB[jobType] || LEVELS_BY_JOB.moderate
+  return levels.find(l => wbgt <= l.max)
 }

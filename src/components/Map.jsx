@@ -20,6 +20,7 @@ const CITIES = [
 ];
 
 const WAQI_TOKEN = 'b20b4b2b6a74e467a9a650691a9e5f291fd258ca';
+const GROQ_KEY = 'GROQ_KEY_HERE';
 
 function getColor(aqi) {
   if (!aqi || aqi < 0) return '#888';
@@ -41,7 +42,6 @@ function getLabel(aqi) {
   return 'Hazardous';
 }
 
-// inject global CSS to remove white leaflet popup borders
 const popupStyle = `
   .leaflet-popup-content-wrapper {
     background: transparent !important;
@@ -70,7 +70,6 @@ function FlyToCity({ location, markerRefs }) {
   useEffect(() => {
     if (location?.lat && location?.lon) {
       map.flyTo([location.lat, location.lon], 8, { duration: 1.5 });
-      // auto open popup after fly
       setTimeout(() => {
         const ref = markerRefs.current[location.name];
         if (ref) ref.openPopup();
@@ -82,12 +81,12 @@ function FlyToCity({ location, markerRefs }) {
 
 function Legend() {
   const levels = [
-    { label: 'Good',               color: '#00e400', range: '0–50'    },
-    { label: 'Moderate',           color: '#ffff00', range: '51–100'  },
-    { label: 'Sensitive Groups',   color: '#ff7e00', range: '101–150' },
-    { label: 'Unhealthy',          color: '#ff0000', range: '151–200' },
-    { label: 'Very Unhealthy',     color: '#8f3f97', range: '201–300' },
-    { label: 'Hazardous',          color: '#7e0023', range: '300+'    },
+    { label: 'Good',             color: '#00e400', range: '0–50'    },
+    { label: 'Moderate',         color: '#ffff00', range: '51–100'  },
+    { label: 'Sensitive Groups', color: '#ff7e00', range: '101–150' },
+    { label: 'Unhealthy',        color: '#ff0000', range: '151–200' },
+    { label: 'Very Unhealthy',   color: '#8f3f97', range: '201–300' },
+    { label: 'Hazardous',        color: '#7e0023', range: '300+'    },
   ];
   return (
     <div style={{
@@ -110,12 +109,52 @@ function Legend() {
   );
 }
 
+function AIAdvisoryBox({ text, onClose }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 99999,
+      background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '20px',
+    }}>
+      <div style={{
+        background: 'linear-gradient(135deg, #0f0f18, #1a1a2e)',
+        border: '1px solid rgba(255,102,0,0.4)',
+        borderTop: '3px solid #ff6600',
+        borderRadius: '14px', padding: '24px',
+        maxWidth: '420px', width: '100%',
+        boxShadow: '0 0 40px rgba(255,102,0,0.15)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+          <span style={{ fontSize: '18px' }}>🤖</span>
+          <span style={{ fontSize: '13px', fontWeight: '700', color: '#ff6600', letterSpacing: '0.05em' }}>
+            AI WORKER ADVISORY
+          </span>
+        </div>
+        <p style={{ fontSize: '13px', color: '#ddd', lineHeight: '1.7', marginBottom: '18px' }}>
+          {text}
+        </p>
+        <button onClick={onClose} style={{
+          width: '100%', padding: '9px',
+          background: '#ff6600', color: '#fff',
+          border: 'none', borderRadius: '8px',
+          fontSize: '12px', fontWeight: '700',
+          cursor: 'pointer', letterSpacing: '0.05em',
+        }}>
+          DISMISS
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Map({ location }) {
   const [cityData, setCityData] = useState([]);
+  const [aiText, setAiText] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const markerRefs = useRef({});
 
   useEffect(() => {
-    // inject popup CSS once
     if (!document.getElementById('leaflet-popup-override')) {
       const style = document.createElement('style');
       style.id = 'leaflet-popup-override';
@@ -149,11 +188,63 @@ export default function Map({ location }) {
     fetchAll();
   }, []);
 
+  async function getAIAdvice(city) {
+    setAiLoading(true);
+    setAiText(null);
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GROQ_KEY}`
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          max_tokens: 150,
+          messages: [
+            {
+              role: "system",
+              content: "You are an occupational health advisor specializing in outdoor worker safety. Give concise, actionable advisories."
+            },
+            {
+              role: "user",
+              content: `City: ${city.name}. AQI: ${city.aqi}. PM2.5: ${city.pm25} µg/m³. Dominant pollutant: ${city.dominant}. Give a 2-sentence outdoor worker health advisory. Be direct, specific, and actionable.`
+            }
+          ]
+        })
+      });
+      const data = await res.json();
+      console.log("Groq response:", data);
+      if (data.choices?.[0]?.message?.content) {
+        setAiText(data.choices[0].message.content);
+      } else {
+        setAiText("Error: " + JSON.stringify(data));
+      }
+    } catch (err) {
+      setAiText("Network error: " + err.message);
+    }
+    setAiLoading(false);
+  }
+
   const isSearched = (name) =>
     location?.name?.toLowerCase() === name.toLowerCase();
 
   return (
     <div style={{ position: 'relative' }} className="h-[600px] w-full rounded-xl">
+
+      {aiLoading && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{ color: '#ff6600', fontSize: '14px', fontWeight: '700', letterSpacing: '0.1em' }}>
+            🤖 Generating advisory...
+          </div>
+        </div>
+      )}
+      {aiText && <AIAdvisoryBox text={aiText} onClose={() => setAiText(null)} />}
+
       <MapContainer
         center={[20, 78]}
         zoom={5}
@@ -193,7 +284,6 @@ export default function Map({ location }) {
                   minWidth: '170px',
                   fontFamily: 'sans-serif',
                 }}>
-                  {/* Header */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <span style={{ fontSize: '14px', fontWeight: '700', color: '#fff' }}>
                       {city.name}
@@ -206,7 +296,6 @@ export default function Map({ location }) {
                     )}
                   </div>
 
-                  {/* AQI big number */}
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '4px' }}>
                     <span style={{ fontSize: '32px', fontWeight: '900', color, lineHeight: 1 }}>
                       {city.aqi ?? '—'}
@@ -214,15 +303,12 @@ export default function Map({ location }) {
                     <span style={{ fontSize: '11px', color: '#555', fontFamily: 'monospace' }}>AQI</span>
                   </div>
 
-                  {/* Label */}
                   <div style={{ fontSize: '11px', color, fontWeight: '600', marginBottom: '10px', letterSpacing: '0.03em' }}>
                     {getLabel(city.aqi)}
                   </div>
 
-                  {/* Divider */}
                   <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '8px' }} />
 
-                  {/* Stats */}
                   {city.pm25 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
                       <span style={{ color: '#555' }}>PM2.5</span>
@@ -230,11 +316,25 @@ export default function Map({ location }) {
                     </div>
                   )}
                   {city.dominant && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '10px' }}>
                       <span style={{ color: '#555' }}>Dominant</span>
                       <span style={{ color: '#ccc', fontFamily: 'monospace', textTransform: 'uppercase' }}>{city.dominant}</span>
                     </div>
                   )}
+
+                  <button
+                    onClick={(e) => { e.stopPropagation(); getAIAdvice(city); }}
+                    style={{
+                      width: '100%',
+                      background: 'linear-gradient(90deg, #ff6600, #ff4400)',
+                      color: '#fff', border: 'none',
+                      borderRadius: '6px', padding: '8px',
+                      fontSize: '11px', fontWeight: '700',
+                      cursor: 'pointer', letterSpacing: '0.06em',
+                    }}
+                  >
+                    🤖 AI WORKER ADVISORY
+                  </button>
                 </div>
               </Popup>
             </CircleMarker>
