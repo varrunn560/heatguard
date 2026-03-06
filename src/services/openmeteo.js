@@ -28,7 +28,7 @@ export async function getHistoricalWeather(lat, lon) {
   const fmt = d => d.toISOString().split("T")[0];
 
   const res = await fetch(
-    `${BASE}/archive?latitude=${lat}&longitude=${lon}` +
+    `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}` +
     `&start_date=${fmt(start)}&end_date=${fmt(end)}` +
     `&daily=temperature_2m_max,precipitation_sum` +
     `&timezone=auto`
