@@ -122,15 +122,15 @@ Open `http://localhost:5173`
 
 ## 👥 Team
 
-Built in 6 hours at [Hackathon Name]
-
-| Person | Role |
-|---|---|
-| P1 | Project Lead · APIs · WBGT Logic · App.jsx |
-| P2 | Map · Geospatial · Leaflet · AI Advisory |
-| P3 | Charts · WBGT Gauge · Visualizations |
-| P4 | UI · Work Advisor · Alerts · Compare |
-
+Built in 6 hours at **Rush-A-Thon** Organized at VIT Chennai  
+-----------------------------------------------------------------------------
+|       Team      |                         Role                            |  
+|-----------------|---------------------------------------------------------|
+| Varun Dubey     | ·APIs   · WBGT Logic   · App.jsx                        |
+| Kamalesh N      | ·Map    · Geospatial   · Leaflet        · AI Advisory   |
+| Kritihk Ragav S | ·Charts · WBGT Gauge   · Visualizations                 |
+| Sai Abhishek D  | ·UI     · Work Advisor · Alerts         · Compare       |
+-----------------------------------------------------------------------------
 ---
 
 ## 📊 Impact
@@ -164,3 +164,14 @@ Built in 6 hours at [Hackathon Name]
 ---
 
 *Built for Problem Statement 2.3 — Environmental Intelligence Dashboard*
+**Problem Statement**
+Environmental issues such as climate change, pollution, deforestation, and inefficient resource management are becoming increasingly significant across both urban and rural regions. Although awareness around these challenges has grown and large amounts of environmental data are available, many communities, organizations, and governments still find it difficult to effectively monitor environmental conditions and translate data into meaningful action.
+The lack of accessible tools and timely insights can limit the ability to manage natural resources efficiently or respond proactively to environmental concerns.
+
+**Challenge:**
+Create a scalable platform that helps analyze and visualize environmental data to support better awareness and decision-making around environmental challenges such as pollution, deforestation, climate trends, or resource usage. The system should:
+Utilize publicly available datasets or open APIs related to environmental indicators such as air quality, temperature, rainfall, forest cover, or pollution levels
+Analyze data to identify patterns, anomalies, or long-term environmental trends
+Provide intuitive dashboards, maps, or visualizations that help users understand environmental conditions in specific regions
+Generate insights or alerts that highlight potential environmental risks or changes over time
+Allow users to explore environmental data and compare conditions across locations or time periods
