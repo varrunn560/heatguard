@@ -164,6 +164,7 @@ Built in 6 hours at **Rush-A-Thon** Organized at VIT Chennai
 ---
 
 *Built for Problem Statement 2.3 — Environmental Intelligence Dashboard*
+
 **Problem Statement**
 Environmental issues such as climate change, pollution, deforestation, and inefficient resource management are becoming increasingly significant across both urban and rural regions. Although awareness around these challenges has grown and large amounts of environmental data are available, many communities, organizations, and governments still find it difficult to effectively monitor environmental conditions and translate data into meaningful action.
 The lack of accessible tools and timely insights can limit the ability to manage natural resources efficiently or respond proactively to environmental concerns.
